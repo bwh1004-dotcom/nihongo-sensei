@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIHONGO SENSEI | N2 회화 연습</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #c41e3a;
+    --dark: #1a1a1a;
+    --bg: #f5f0e8;
+    --card: #fffef9;
+    --grid: #e8e0d0;
+    --text: #1a1a1a;
+    --muted: #888;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, var(--grid) 39px, var(--grid) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, var(--grid) 39px, var(--grid) 40px);
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 680px;
+    background: var(--card);
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--red), 8px 8px 0 var(--dark);
+    display: flex;
+    flex-direction: column;
+    height: 92vh;
+    overflow: hidden;
+  }
+
+  /* 헤더 */
+  .header {
+    background: var(--dark);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-kanji {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 30px;
+    color: var(--red);
+    line-height: 1;
+  }
+  .header-title { color: #fffef9; font-size: 13px; font-weight: 700; letter-spacing: 3px; }
+  .header-sub { color: var(--muted); font-size: 10px; margin-top: 2px; }
+  .level-badge {
+    background: var(--red);
+    color: #fff;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    border-radius: 2px;
+  }
+
+  /* API 키 입력 */
+  .api-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 40px 24px;
+  }
+  .api-kanji {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 80px;
+    color: var(--dark);
+    opacity: 0.06;
+    position: absolute;
+  }
+  .api-title { font-size: 18px; font-weight: 700; color: var(--dark); position: relative; }
+  .api-desc { font-size: 13px; color: #666; text-align: center; line-height: 1.8; position: relative; }
+  .api-input {
+    width: 100%;
+    max-width: 440px;
+    padding: 12px 16px;
+    border: 1.5px solid #c8c0b0;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: monospace;
+    background: #fff;
+    color: var(--dark);
+    outline: none;
+    position: relative;
+  }
+  .api-input:focus { border-color: var(--red); }
+  .start-btn {
+    background: var(--red);
+    color: #fff;
+    border: none;
+    padding: 13px 36px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    border-radius: 2px;
+    box-shadow: 3px 3px 0 var(--dark);
+    position: relative;
+    font-family: 'Noto Serif JP', serif;
+    transition: transform .1s, box-shadow .1s;
+  }
+  .start-btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--dark); }
+  .start-btn:active { transform: translate(1px,1px); box-shadow: 2px 2px 0 var(--dark); }
+
+  /* 채팅 */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .chat-area::-webkit-scrollbar { width: 4px; }
+  .chat-area::-webkit-scrollbar-thumb { background: #c8c0b0; border-radius: 2px; }
+
+  .user-row { display: flex; justify-content: flex-end; animation: fadeIn .3s ease; }
+  .user-bubble {
+    background: var(--dark);
+    color: #fffef9;
+    padding: 10px 16px;
+    border-radius: 20px 20px 4px 20px;
+    max-width: 75%;
+    font-size: 14px;
+    line-height: 1.6;
+    font-family: 'Noto Serif JP', serif;
+  }
+
+  .ai-row { display: flex; flex-direction: column; gap: 8px; animation: fadeIn .3s ease; }
+  .jp-bubble {
+    background: #fff;
+    border: 1.5px solid #e0d8c8;
+    border-left: 4px solid var(--red);
+    padding: 12px 14px;
+    border-radius: 0 16px 16px 0;
+    max-width: 92%;
+  }
+  .jp-label { font-size: 10px; color: var(--red); font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
+  .jp-text { font-size: 15px; color: var(--dark); line-height: 1.9; font-family: 'Noto Serif JP', serif; }
+
+  .feedback-box {
+    background: #f0f7f0;
+    border: 1px solid #c8e0c8;
+    border-radius: 8px;
+    padding: 10px 14px;
+    max-width: 92%;
+  }
+  .feedback-label { font-size: 11px; font-weight: 700; color: #2d6a2d; margin-bottom: 4px; }
+  .vocab-box {
+    background: #fffff0;
+    border: 1px solid #e0e0a0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    max-width: 92%;
+  }
+  .vocab-label { font-size: 11px; font-weight: 700; color: #806000; margin-bottom: 4px; }
+  .small-text { font-size: 13px; color: #333; line-height: 1.7; }
+
+  /* 타이핑 */
+  .typing { display: flex; gap: 4px; align-items: center; height: 20px; }
+  .dot {
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: .2s; }
+  .dot:nth-child(3) { animation-delay: .4s; }
+
+  /* 마이크 */
+  .mic-area {
+    border-top: 1px solid #e0d8c8;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #faf8f4;
+    flex-shrink: 0;
+  }
+  .mic-btn {
+    width: 40px; height: 40px;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all .2s;
+    box-shadow: 2px 2px 0 var(--dark);
+  }
+  .mic-btn.idle { background: var(--dark); }
+  .mic-btn.listening { background: var(--red); animation: pulse 1s infinite; }
+  .mic-status { font-size: 11px; color: var(--muted); flex: 1; }
+
+  /* 입력 */
+  .input-area {
+    border-top: 2px solid var(--dark);
+    padding: 12px;
+    display: flex;
+    gap: 8px;
+    background: var(--card);
+    flex-shrink: 0;
+  }
+  textarea {
+    flex: 1;
+    border: 1.5px solid #c8c0b0;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: 'Noto Serif JP', serif;
+    resize: none;
+    outline: none;
+    background: #fff;
+    color: var(--dark);
+    line-height: 1.6;
+  }
+  textarea:focus { border-color: var(--red); }
+  .send-btn {
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    font-family: 'Noto Serif JP', serif;
+    box-shadow: 2px 2px 0 var(--dark);
+    align-self: flex-end;
+    height: 44px;
+    flex-shrink: 0;
+    transition: opacity .2s;
+  }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(196,30,58,.4)} 50%{box-shadow:0 0 0 8px rgba(196,30,58,0)} }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-left">
+      <span class="header-kanji">日</span>
+      <div>
+        <div class="header-title">NIHONGO SENSEI</div>
+        <div class="header-sub">N2 목표 회화 연습</div>
+      </div>
+    </div>
+    <div class="level-badge">N2</div>
+  </div>
+
+  <!-- API 키 입력 화면 -->
+  <div class="api-screen" id="apiScreen">
+    <div class="api-kanji">会話</div>
+    <div class="api-title">일본어 회화 연습</div>
+    <div class="api-desc">Anthropic API 키를 입력하고 시작하세요<br>대화 내용은 브라우저에만 저장됩니다</div>
+    <input class="api-input" id="apiKeyInput" type="password" placeholder="sk-ant-api03-..." />
+    <button class="start-btn" onclick="startApp()">始めましょう →</button>
+  </div>
+
+  <!-- 채팅 화면 (숨김) -->
+  <div class="chat-area" id="chatArea" style="display:none"></div>
+
+  <div class="mic-area" id="micArea" style="display:none">
+    <button class="mic-btn idle" id="micBtn" onclick="toggleMic()" title="음성 입력">🎤</button>
+    <span class="mic-status" id="micStatus">🎤 버튼을 누르고 일본어로 말하세요</span>
+    <button class="send-btn" id="stopBtn" onclick="stopMic()" style="display:none; padding:0 12px; height:34px; font-size:11px;">⏹ 완료</button>
+  </div>
+
+  <div class="input-area" id="inputArea" style="display:none">
+    <textarea id="inputBox" rows="2" placeholder="日本語で話しかけてください... (Enter 전송)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">送信</button>
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `あなたは親切な日本語会話の先生です。ユーザーはN2合格を目指している韓国人学習者です。
+【会話ルール】
+1. ユーザーが日本語で話しかけたら、自然な日本語で返答する
+2. 必ず以下の형식으로 응답 (구분자 반드시 포함):
+---JAPANESE---
+(자연스러운 일본어 대화 응답)
+---FEEDBACK---
+(한국어로 간단한 피드백. 문법 오류 교정, 없으면 칭찬 + N2 유용 표현 1개)
+---VOCAB---
+(N2 유용 단어/표현 1개: 단어 - 의미)
+3. 주제는 일상, 여행, 쇼핑, 직장, 가족 등 다양하게
+4. 첫 메시지는 따뜻한 인사로 시작`;
+
+let apiKey = '';
+let history = [];
+let isLoading = false;
+let isListening = false;
+let mediaRecorder = null;
+let audioChunks = [];
+let recognition = null;
+
+// Web Speech API 지원 여부
+const speechSupported = ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+function startApp() {
+  apiKey = document.getElementById('apiKeyInput').value.trim();
+  if (!apiKey.startsWith('sk-')) {
+    alert('올바른 API 키를 입력해주세요 (sk-ant-... 로 시작)');
+    return;
+  }
+  document.getElementById('apiScreen').style.display = 'none';
+  document.getElementById('chatArea').style.display = 'flex';
+  document.getElementById('micArea').style.display = speechSupported ? 'flex' : 'none';
+  document.getElementById('inputArea').style.display = 'flex';
+
+  if (!speechSupported) {
+    document.getElementById('micArea').style.display = 'none';
+  }
+
+  document.getElementById('inputBox').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+
+  startConversation();
+}
+
+function parseResponse(text) {
+  const jpMatch = text.match(/---JAPANESE---\s*([\s\S]*?)(?=---FEEDBACK---|$)/);
+  const fbMatch = text.match(/---FEEDBACK---\s*([\s\S]*?)(?=---VOCAB---|$)/);
+  const vcMatch = text.match(/---VOCAB---\s*([\s\S]*?)$/);
+  return {
+    japanese: jpMatch ? jpMatch[1].trim() : text,
+    feedback: fbMatch ? fbMatch[1].trim() : '',
+    vocab: vcMatch ? vcMatch[1].trim() : ''
+  };
+}
+
+async function callClaude(messages) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-4-5',
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content[0].text;
+}
+
+function addTyping() {
+  const div = document.createElement('div');
+  div.className = 'ai-row';
+  div.id = 'typing';
+  div.innerHTML = `<div class="jp-bubble"><div class="jp-label">先生</div><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>`;
+  document.getElementById('chatArea').appendChild(div);
+  scrollBottom();
+}
+function removeTyping() { document.getElementById('typing')?.remove(); }
+
+function addUserMsg(text) {
+  const div = document.createElement('div');
+  div.className = 'user-row';
+  div.innerHTML = `<div class="user-bubble">${text}</div>`;
+  document.getElementById('chatArea').appendChild(div);
+  scrollBottom();
+}
+
+function addAiMsg(raw) {
+  const { japanese, feedback, vocab } = parseResponse(raw);
+  const div = document.createElement('div');
+  div.className = 'ai-row';
+  let html = `<div class="jp-bubble"><div class="jp-label">先生</div><div class="jp-text">${japanese}</div></div>`;
+  if (feedback) html += `<div class="feedback-box"><div class="feedback-label">📝 피드백</div><div class="small-text">${feedback}</div></div>`;
+  if (vocab) html += `<div class="vocab-box"><div class="vocab-label">💡 오늘의 표현</div><div class="small-text">${vocab}</div></div>`;
+  div.innerHTML = html;
+  document.getElementById('chatArea').appendChild(div);
+  scrollBottom();
+}
+
+function scrollBottom() {
+  const c = document.getElementById('chatArea');
+  setTimeout(() => c.scrollTop = c.scrollHeight, 100);
+}
+
+async function startConversation() {
+  isLoading = true;
+  addTyping();
+  try {
+    history.push({ role: 'user', content: 'こんにちは！会話練習を始めましょう。' });
+    const msg = await callClaude(history);
+    history.push({ role: 'assistant', content: msg });
+    removeTyping();
+    addAiMsg(msg);
+  } catch(e) {
+    removeTyping();
+    alert('API 연결 실패: ' + e.message);
+  }
+  isLoading = false;
+}
+
+async function sendMessage(text) {
+  const input = document.getElementById('inputBox');
+  const userText = text || input.value.trim();
+  if (!userText || isLoading) return;
+  input.value = '';
+
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  addUserMsg(userText);
+  addTyping();
+
+  history.push({ role: 'user', content: userText });
+  try {
+    const msg = await callClaude(history);
+    history.push({ role: 'assistant', content: msg });
+    removeTyping();
+    addAiMsg(msg);
+  } catch(e) {
+    removeTyping();
+    alert('오류: ' + e.message);
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+// 음성 인식
+function toggleMic() {
+  if (isLoading) return;
+  if (isListening) { stopMic(); return; }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'ja-JP';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onresult = e => {
+    const text = e.results[0][0].transcript;
+    document.getElementById('micStatus').textContent = '✅ 인식: ' + text;
+    document.getElementById('micBtn').className = 'mic-btn idle';
+    document.getElementById('stopBtn').style.display = 'none';
+    isListening = false;
+    sendMessage(text);
+  };
+  recognition.onerror = () => { stopMic(); };
+  recognition.onend = () => {
+    if (isListening) { isListening = false; document.getElementById('micBtn').className = 'mic-btn idle'; }
+  };
+
+  recognition.start();
+  isListening = true;
+  document.getElementById('micBtn').className = 'mic-btn listening';
+  document.getElementById('micBtn').textContent = '🔴';
+  document.getElementById('stopBtn').style.display = 'block';
+  document.getElementById('micStatus').textContent = '🔴 말하고 있으면... ⏹ 완료를 누르세요';
+}
+
+function stopMic() {
+  if (recognition) { recognition.stop(); recognition = null; }
+  isListening = false;
+  document.getElementById('micBtn').className = 'mic-btn idle';
+  document.getElementById('micBtn').textContent = '🎤';
+  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('micStatus').textContent = '🎤 버튼을 누르고 일본어로 말하세요';
+}
+</script>
+</body>
+</html>
